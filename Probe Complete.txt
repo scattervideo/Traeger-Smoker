@@ -1,0 +1,51 @@
+Probe % Complete
+
+Sensors
+
+sensor.probe_percent_complete
+
+	{% set set_temp = states('sensor.probe_set_temp') | float(default=0) %}
+	{% set actual_temp = states('sensor.probe_actual_temp') | float(default=0) %}
+	{% if set_temp > 0 and actual_temp != 0 %}
+	{{ (actual_temp / set_temp * 100) | round(0) }}
+	{% else %}
+	0
+	{% endif %}
+	
+sensor.probe_actual_temp
+	{% set temp = state_attr('climate.thrill_smoker_probe_p0', 'grill_native_cur_val') %}
+	{% if temp is not none %}
+	  {{ temp }}
+	{% else %}
+	  0
+	{% endif %}
+
+sensor.probe_set_temp
+	{% set temp = state_attr('climate.thrill_smoker_probe_p0', 'grill_native_set_val') %}
+	  {% if temp is not none %}
+	    {{ temp }}
+	  {% else %}
+	    0
+	  {% endif %}
+
+
+Dashboard Card
+
+	card:
+	  type: custom:bar-card
+	  title: Smoker Probe %
+	  entities:
+	    - entity: sensor.probe_percent_complete
+	      min: 0
+	      max: 100
+	      icon: none
+	      severity:
+	        - from: 0
+	          to: 33
+	          color: red
+	        - from: 33
+	          to: 80
+	          color: yellow
+	        - from: 80
+	          to: 100
+	          color: green

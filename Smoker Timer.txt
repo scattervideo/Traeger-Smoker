@@ -1,0 +1,163 @@
+This is a combination of timers, helpers, automation and dashboard view.  It is nice to have a consistent timer that can be set for notifications across different devices on completion.
+
+Timers/Helpers
+
+Timer Object
+timer.configurable_timer
+
+
+Timer Input Hours
+input_number.timer2_hours
+Minimum 0
+Maxmimum 23
+Step 1
+
+Timer Input Minutes
+input_number.timer2_minutes
+Minimum 0
+Maxmimum 59
+Step 1
+
+Automation to Manage Timer
+
+alias: Set Cook Timer Duration
+description: ""
+triggers:
+  - entity_id:
+      - input_number.timer2_hours
+      - input_number.timer2_minutes
+    trigger: state
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 5
+conditions:
+  - condition: state
+    entity_id: timer.configurable_timer
+    state: idle
+    enabled: false
+actions:
+  - target:
+      entity_id: timer.configurable_timer
+    action: timer.cancel
+    data: {}
+  - target:
+      entity_id: timer.configurable_timer
+    data:
+      duration: >
+        {% set hours = states('input_number.timer2_hours') | float %} {% set
+        minutes = states('input_number.timer2_minutes') | float %} {{ (hours *
+        3600 + minutes * 60) | int }}
+    action: timer.start
+
+
+Automation to Stop and Notify
+
+alias: Stop Cook Timer Automation
+description: ""
+triggers:
+  - entity_id:
+      - timer.configurable_timer
+    to: idle
+    trigger: state
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 10
+conditions: []
+actions:
+  - data:
+      message: The Cook timer is complete please go check it out
+    action: notify.mobile_app_YOURPHONE
+  - alias: Smoker Timer Done
+    data:
+      target:
+        - media_player.YOURDEVICE
+      data:
+        type: tts
+      message: The cook timer is complete please go check it out.
+    action: notify.alexa_media
+  - data:
+      message: The Cook timer is complete please go check it out
+    action: notify.mobile_app_YOURPHONE
+
+
+Dashboard Card
+
+type: vertical-stack
+cards:
+  - type: custom:mushroom-title-card
+    title: ⏲️ Chef Timer!
+    subtitle: Set duration and control timer
+  - type: entities
+    entities:
+      - timer.configurable_timer
+  - type: conditional
+    conditions:
+      - entity: timer.configurable_timer
+        state_not: idle
+    card:
+      type: custom:mushroom-template-card
+      primary: Timer Active
+      secondary: >
+        Started: {{ state_attr('timer.configurable_timer', 'start_datetime') |
+        default(0) | as_timestamp | timestamp_custom('%I:%M %p') }}
+      icon: mdi:timer-sync-outline
+      icon_color: green
+      fill_container: true
+  - type: horizontal-stack
+    cards:
+      - type: custom:mushroom-number-card
+        entity: input_number.timer2_hours
+        name: Hours
+        icon: mdi:clock-time-three-outline
+        display_mode: buttons
+        fill_container: true
+        icon_color: blue
+      - type: custom:mushroom-number-card
+        entity: input_number.timer2_minutes
+        name: Minutes
+        icon: mdi:clock-time-fifteen-outline
+        display_mode: buttons
+        fill_container: true
+        icon_color: blue
+  - type: custom:mushroom-chips-card
+    alignment: center
+    style:
+      background-color: white
+      border-radius: 10px 10px 10px 10px
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2)
+    chips:
+      - type: action
+        icon: mdi:play
+        icon_color: green
+        tap_action:
+          action: call-service
+          service: timer.start
+          target:
+            entity_id: timer.configurable_timer
+      - type: action
+        icon: mdi:pause
+        icon_color: orange
+        tap_action:
+          action: call-service
+          service: timer.pause
+          target:
+            entity_id: timer.configurable_timer
+      - type: action
+        icon: mdi:stop
+        icon_color: red
+        tap_action:
+          action: call-service
+          service: timer.cancel
+          target:
+            entity_id: timer.configurable_timer
+style: |
+  ha-card {
+    --ha-card-border-radius: 20px;
+    --ha-card-box-shadow: var(--ha-card-box-shadow, 0 2px 4px rgba(0, 0, 0, 0.1));
+    padding: 12px;
+    background: var(--card-background-color, var(--ha-card-background));
+  }
+
+

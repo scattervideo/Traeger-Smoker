@@ -1,0 +1,29 @@
+alias: Traeger Probe Temp Notification
+description: ""
+triggers:
+  - value_template: |-
+      {% set alarm_temp_smoker = states('sensor.probe_actual_temp') %}
+      {% set probe_temp_smoker = states('sensor.probe_set_temp') %}
+      {{ 
+        alarm_temp_smoker not in ['unavailable', 'unknown', 'none', '0'] and 
+        probe_temp_smoker not in ['unavailable', 'unknown', 'none', '0'] and
+        (alarm_temp_smoker | float - probe_temp_smoker | float) | abs <= 5
+      }}
+    alias: When Smoker probe and actual are within 5 degrees
+    trigger: template
+conditions: []
+actions:
+  - data:
+      message: >
+        The temperature of Smoker Probe is within 5 degrees of your target! 
+        Current: {{ states('sensor.probe_actual_temp') }} Target: {{
+        states('sensor.probe_set_temp') }}
+    action: notify.YOURPHONE
+  - alias: Smoker Probe Done
+    data:
+      target:
+        - media_player.YOURECHO
+      data:
+        type: tts
+      message: The smoker probe is almost complete.  Go check it out.
+    action: notify.alexa_media

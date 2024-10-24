@@ -1,0 +1,17 @@
+type: history-graph
+hours_to_show: 8
+entities:
+  - climate.e8eb1b125cda_climate
+title: 🌡️ Smoker-Temp
+
+
+
+type: history-graph
+entities:
+  - climate.thrill_smoker_probe_p0
+title: 🌡️ Smoker-Probe
+visibility:
+  - condition: state
+    entity: climate.thrill_smoker_probe_p0
+    state_not: unavailable
+hours_to_show: 8

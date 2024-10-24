@@ -1,0 +1,35 @@
+alias: Smoker Over Temp Alert Automation
+description: ""
+triggers:
+  - entity_id:
+      - sensor.e8eb1b125cda_heating_state
+    to: over_temp
+    for:
+      hours: 0
+      minutes: 4
+      seconds: 0
+    trigger: state
+conditions: []
+actions:
+  - data:
+      message: >
+        Alert the Smoker is over temperature please go check it out!  Current:
+        {{ states('sensor.smoker_actual_temp') }}
+    action: notify.mobile_app_YOURPHONE
+  - alias: Smoker Over Temp alert
+    data:
+      target:
+        - media_player.YOURECHO
+        
+      data:
+        type: tts
+      message: >-
+        Alert <break time="1s"/> Alert <break time="1s"/> the Smoker is over
+        temperature please go check it out!
+    action: notify.alexa_media
+  - data:
+      message: >
+        Alert the Smoker is over temperature please go check it out!  Current:
+        {{ states('sensor.smoker_actual_temp') }}
+    action: notify.mobile_app_YOURPHONE
+mode: single
